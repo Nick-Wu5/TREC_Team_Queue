@@ -37,7 +37,7 @@ const Header: React.FC<HeaderProps & { teamAStreak: number }> = ({
         ></div>
       </div>
 
-      {/* Centered Timer and "Next Up" text */}
+      {/* Centered Timer*/}
       <div className="flex flex-col items-center mx-1">
         <div
           className="text-8xl font-bold leading-none"

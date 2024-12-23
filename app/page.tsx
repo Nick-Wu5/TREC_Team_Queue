@@ -5,6 +5,7 @@ import TeamList from "./components/teamList";
 import Header from "./components/Header";
 import ClockDisplay from "./components/ClockDisplay";
 import { supabase } from "../utils/supabase-js";
+import Image from "next/image";
 
 /**
  * Home Page
@@ -30,7 +31,6 @@ export default function Home() {
   }); // Holds the currently playing teams (Team A and Team B).
   const [teamAStreak, setTeamAStreak] = useState(0); // Tracks the win streak for the reigning team.
   const [timer, setTimer] = useState(420); // Manages the game timer (in seconds) default 7 minutes.
-  const [gameActive, setGameActive] = useState(false); // Booleans for game state tracking.
   const [gameEnded, setGameEnded] = useState(false);
 
   // Fetch teams from the backend
@@ -101,13 +101,8 @@ export default function Home() {
   // Listen for timer updates from the Control Page
   useEffect(() => {
     const handleTimerMessage = (event: MessageEvent) => {
-      const {
-        timer: newTimer,
-        gameActive: isActive,
-        gameEnded: hasEnded,
-      } = event.data;
+      const { timer: newTimer, gameEnded: hasEnded } = event.data;
       setTimer(newTimer);
-      setGameActive(isActive);
       setGameEnded(hasEnded);
     };
 
@@ -130,13 +125,16 @@ export default function Home() {
         <div className="absolute inset-0 bg-red-600 opacity-50 animate-pulse flex items-center justify-center z-0"></div>
       )}
 
-      <Header
-        selectedTeams={selectedTeams}
-        time={`${Math.floor(timer / 60)}:${(timer % 60)
-          .toString()
-          .padStart(2, "0")}`}
-        teamAStreak={teamAStreak}
-      />
+      {/* Header */}
+      <div className="flex justify-center">
+        <Header
+          selectedTeams={selectedTeams}
+          time={`${Math.floor(timer / 60)}:${(timer % 60)
+            .toString()
+            .padStart(2, "0")}`}
+          teamAStreak={teamAStreak}
+        />
+      </div>
 
       {/* Next Up Text */}
       <div
@@ -149,10 +147,12 @@ export default function Home() {
       {/* Left Purdue Pete & Time, Centered Team List, Right Rec Logo*/}
       <main className="flex items-center flex-1">
         <div className="left-section">
-          <img
+          <Image
             src="/purduePete.png"
             alt="Purdue Pete"
             className="footer-image-left"
+            width={250}
+            height={400}
           />
           <ClockDisplay />
         </div>
@@ -163,10 +163,12 @@ export default function Home() {
           />
         </div>
         <div className="right-section">
-          <img
+          <Image
             src="/PurdueRecLogo.png"
             alt="Purdue Rec Logo"
             className="footer-image-right"
+            width={250}
+            height={250}
           />
         </div>
       </main>

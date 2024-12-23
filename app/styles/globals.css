@@ -46,7 +46,7 @@ button {
 
 /* === Capsule Component Styling === */
 .capsule {
-  width: 402px;
+  width: 400px;
   height: 70px;
   margin: 5px;
   font-size: 48px;
@@ -70,7 +70,7 @@ button {
 }
 
 .team-list-container {
-  margin: 0 auto; /* Centers the team list within the flex layout */
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -82,7 +82,7 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 150px; /* Adjust independently for left section */
+  margin-top: 150px;
   margin-right: 180px;
   margin-bottom: 0px;
 }
@@ -91,8 +91,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 350px; /* Adjust independently for right section */
-  margin-left: 200px;
+  margin-top: 350px;
+  margin-left: 180px;
   margin-bottom: 0px;
 }
 

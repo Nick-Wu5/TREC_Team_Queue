@@ -19,9 +19,8 @@ const ControlPage: React.FC = () => {
   const [gameActive, setGameActive] = useState(false); // Flags for the game's active and end states.
   const [gameEnded, setGameEnded] = useState(false);
   const [teamName, setTeamName] = useState(""); // Form inputs for team actions.
-  const [password, setPassword] = useState("");
-  const [masterKey, setMasterKey] = useState("");
-  const [teamId, setTeamId] = useState("");
+  const [password, setPassword] = useState(""); // Password var when creating a team
+  const [masterKey, setMasterKey] = useState(""); // Password var when removing a team
   const [teamPassword, setTeamPassword] = useState("");
   const [teams, setTeams] = useState<Team[]>([]);
   const [confirmationVisible, setConfirmationVisible] = useState(false); // Whether the confirmation panel is displayed.
@@ -103,7 +102,11 @@ const ControlPage: React.FC = () => {
     setTimer(420); // Reset to 7:00
     setGameActive(true);
     setGameEnded(false);
-    timerChannel.postMessage({ timer: 10, gameActive: true, gameEnded: false });
+    timerChannel.postMessage({
+      timer: 420,
+      gameActive: true,
+      gameEnded: false,
+    });
   };
 
   // Ends the game manually and resets the timer.
@@ -130,8 +133,7 @@ const ControlPage: React.FC = () => {
       if (response.ok) {
         fetchTeams(); // Refresh teams after creation
         setTeamName(""); // Clear the team name input
-        setTeamPassword(""); // Clear the team password input
-        setMasterKey(""); // Clear the master key input (if applicable)
+        setPassword(""); // Clear the team password input
         setActivePanel(null); // Close panel
       } else {
         const error = await response.json();
@@ -183,7 +185,6 @@ const ControlPage: React.FC = () => {
     setActivePanel(null);
     setTeamName("");
     setPassword("");
-    setTeamId("");
     setTeamPassword("");
     setMasterKey("");
   };
@@ -284,14 +285,6 @@ const ControlPage: React.FC = () => {
     setSelectedWinner(null);
     setSelectedAction(null);
   };
-
-  // Utility function to use unused variables
-  function useUnusedVariables(...vars: unknown[]): void {
-    // Do nothing, just reference the variables
-    vars.forEach(() => {});
-  }
-
-  useUnusedVariables(teamId);
 
   return (
     <div className="flex flex-col justify-evenly items-center min-h-screen bg-gray-50">
