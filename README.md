@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TREC Team Queue
 
-## Getting Started
+TREC Team Queue is a dynamic dual-interface React application designed to increase the efficiency of team rotations within the Purdue indoor pickup soccer facility turf recreational (TREC) building. 
 
-First, run the development server:
+As a regular participant in the facility, I noticed a significant lack of structure when it came to rotating teams. This often led to constant arguments, confusion, and time inefficiency, detracting from the overall experience. I designed TREC Team Queue to streamline team management, reduce conflicts, and create a more enjoyable and efficient environment for everyone involved.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Dynamic Team Rotation**: Users can specify the outcome of each game on the 'control' screen to reorder the teams accordingly.
+- **Add/Remove Teams**: Users can add and remove teams, each associaed with a four digit passcode for added security.
+- **Win Streak Tracker**: Displays the current win streak of the dominant team with a fire icon and the streak number, updates with a subtle animation. 
+- **Dual Interfaces**:
+  - **TV Display**: Optimized for a mounted TV in the facility, providing a clear and engaging view of the queue and win streaks.
+  - **iPad Interface**: Used at the check-in desk to manage the queue and communicate updates in real time to the TV display.
+- **Real-Time Updates**: The iPad and TV interfaces are synchronized, ensuring that any updates made on the iPad are instantly reflected on the TV.
+- **Responsive Design**: Both interfaces are optimized for their respective devices, ensuring usability and clarity.
+- **Backend with Supabase**: Secure and scalable backend for storing team information and managing queue data.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technology Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **React**: Frontend framework for building user interfaces.
+- **TypeScript**: Enhances JavaScript with type definitions to improve code quality and reduce bugs.
+- **CSS**: Custom styling for responsive and polished UI.
+- **Vercel**: For hosting and deploying the application.
+- **Supabase**: Backend solution for managing team and queue information with real-time database capabilities.
 
-## Learn More
+## Live Demo
 
-To learn more about Next.js, take a look at the following resources:
+Visit the live hosted project at [nextjs-trecqueue.vercel.app](https://nextjs-trecqueue.vercel.app).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **TV Display**: The default view shows the TV display interface.
+- **Control Page**: Add `/control` to the URL to access the iPad check-in interface:
+  [nextjs-trecqueue.vercel.app/control](https://nextjs-trecqueue.vercel.app/control).
