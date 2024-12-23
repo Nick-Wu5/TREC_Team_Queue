@@ -1,15 +1,15 @@
-import React from 'react';
-import Capsule from './Capsule';
-
+import React from "react";
+import Capsule from "./Capsule";
 
 /**
  * TeamList component renders a list of teams using the Capsule component.
- *
  * This component takes an array of team names as a prop and displays each name
  * inside a styled capsule, stacking them vertically.
  *
- * @param {TeamListProps} props - The props for the component.
+ * @component
  * @param {string[]} props.teams - An array of team names to display.
+ * @param {number} props.additionalTeamsCount - Counts teams after 5+ are in list
+ *
  * @returns {JSX.Element} The rendered list of team capsules.
  */
 interface TeamListProps {
@@ -26,7 +26,7 @@ const TeamList: React.FC<TeamListProps> = ({ teams, additionalTeamsCount }) => {
           <Capsule text={team} />
         </div>
       ))}
-      
+
       {/* Conditionally render the "and x more teams..." capsule if there are additional teams */}
       {additionalTeamsCount > 0 && (
         <div className="flex-shrink-0">

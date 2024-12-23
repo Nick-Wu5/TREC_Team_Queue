@@ -1,33 +1,61 @@
-.fire-icon-container {
-    position: relative;
-    display: inline-block; /* Keeps the icon and number together */
+/* === Win Streak Component Styling === */
+.win-streak {
+  display: flex;
+  align-items: center;
+  font-size: 3rem;
+  position: absolute;
+  top: -50px; /* Adjust to control vertical overlap */
+  left: -30px; /* Adjust to control horizontal overlap */
+  z-index: 10;
 }
 
-.win-streak {
-    display: flex;
-    align-items: center;
-    font-size: 3rem;
-    position: absolute;
-    top: -30px; /* Adjust to control vertical overlap */
-    left: -30px; /* Adjust to control horizontal overlap */
-    z-index: 10; /* Brings WinStreak in front of other elements */
+/* === Fire Icon Styling === */
+.fire-icon-container {
+  position: relative;
+  display: inline-block; /* Keeps the icon and number together */
 }
 
 .fire-icon {
-    font-size: 5rem;
-    margin-right: 0.5rem;
+  transform: scale(0.5);
+  margin-right: 0.5rem;
+  display: inline-block;
 }
 
+/* === Streak Number Styling === */
 .streak-number {
-    position: absolute;
-    top: 50%; /* Position at the vertical center of the icon container */
-    left: 50%; /* Position at the horizontal center of the icon container */
-    transform: translate(-60%, -30%); /* Center the number over the icon */
-    font-weight: bold;
-    font-size: 2rem; /* Adjust as needed for readability */
-    transition: transform 0.3s ease;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-70%, -20%); /* Center the number over the icon */
+  font-weight: bold;
+  font-size: 2rem;
 }
 
-.animate .streak-number {
-    transform: scale(1.3) translate(-50%, -50%);
+/* === Animation Classes === */
+.animate {
+  animation: popAndGlow 1s ease-in-out;
+}
+
+/* === Keyframes for Pop and Glow Animation === */
+@keyframes popAndGlow {
+  0% {
+    opacity: 0.5;
+    filter: drop-shadow(0 0 5px rgba(255, 165, 0, 0.5));
+    transform: scale(0.8);
+  }
+  30% {
+    opacity: 1;
+    filter: drop-shadow(0 0 30px rgba(255, 165, 0, 1));
+    transform: scale(1.3);
+  }
+  70% {
+    opacity: 1;
+    filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.8));
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.5;
+    filter: drop-shadow(0 0 5px rgba(255, 165, 0, 0.5));
+    transform: scale(0.9);
+  }
 }

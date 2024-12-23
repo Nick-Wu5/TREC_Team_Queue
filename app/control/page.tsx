@@ -2,30 +2,85 @@
 
 import React, { useEffect, useState } from "react";
 
+/**
+ * Control Page
+ *
+ * This component provides an interface for managing the teams within the queue.
+ * It allows users to start/stop games, manage team actions (win/draw), and add/remove teams.
+ * This component also synchronizes state across multiple views using the BroadcastChannel API.
+ *
+ * @returns {JSX.Element} The rendered control page UI.
+ */
+const timerChannel = new BroadcastChannel("game_timer_channel"); // Synchronizes timer and game state updates across multiple views.
+
 const ControlPage: React.FC = () => {
-  const [activePanel, setActivePanel] = useState<"add" | "remove" | null>(null);
-  const [timer, setTimer] = useState("7:00");
-  const [teamName, setTeamName] = useState("");
+  const [activePanel, setActivePanel] = useState<"add" | "remove" | null>(null); // Controls which action panel (add/remove) is active.
+  const [timer, setTimer] = useState(420); // Tracks the remaining time for the game in seconds.
+  const [gameActive, setGameActive] = useState(false); // Flags for the game's active and end states.
+  const [gameEnded, setGameEnded] = useState(false);
+  const [teamName, setTeamName] = useState(""); // Form inputs for team actions.
   const [password, setPassword] = useState("");
+  const [masterKey, setMasterKey] = useState("");
   const [teamId, setTeamId] = useState("");
   const [teamPassword, setTeamPassword] = useState("");
   const [teams, setTeams] = useState<Team[]>([]);
-  const [confirmationVisible, setConfirmationVisible] = useState(false);
-  const [selectedWinner, setSelectedWinner] = useState<string | null>(null);
-  const [selectedAction, setSelectedAction] = useState<"win" | "draw" | null>(null);
-  const [teamAStreak, setTeamAStreak] = useState(0);
+  const [confirmationVisible, setConfirmationVisible] = useState(false); // Whether the confirmation panel is displayed.
+  const [selectedWinner, setSelectedWinner] = useState<string | null>(null); // Tracks the selected team and action for updates.
+  const [selectedAction, setSelectedAction] = useState<"win" | "draw" | null>(
+    null
+  );
+  const [teamAStreak, setTeamAStreak] = useState(0); // Tracks the win streak of the first team in the list.
 
-  useUnusedVariables(setTimer, teamId);
+  // Initial fetch and periodic updates
+  useEffect(() => {
+    fetchTeams();
+    const intervalId = setInterval(fetchTeams, 1000); // Refresh teams every 5 seconds
+    return () => clearInterval(intervalId);
+  }, []);
 
-  const closePanel = () => {
-    setActivePanel(null);
-    setTeamName("");
-    setPassword("");
-    setTeamId("");
-    setTeamPassword("");
-  };
+  // Start/Stop Timer Logic
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
 
-  // Fetch teams from the backend
+    const stopGame = () => {
+      clearInterval(interval);
+      setGameEnded(true);
+      setGameActive(false);
+      timerChannel.postMessage({
+        timer: 0,
+        gameActive: false,
+        gameEnded: true,
+      });
+    };
+
+    if (gameActive && !gameEnded) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          const newTime = prev - 1;
+
+          // Post timer updates to other screens
+          timerChannel.postMessage({
+            timer: newTime,
+            gameActive: true,
+            gameEnded: false,
+          });
+
+          if (newTime <= 0) {
+            stopGame(); // Game ends naturally
+            return 0;
+          }
+
+          return newTime;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [gameActive, gameEnded]);
+
+  // Fetches the team list from the backend periodically.
   const fetchTeams = async () => {
     try {
       const response = await fetch("/api/teams");
@@ -43,13 +98,27 @@ const ControlPage: React.FC = () => {
     }
   };
 
-  // Initial fetch and periodic updates
-  useEffect(() => {
-    fetchTeams();
-    const intervalId = setInterval(fetchTeams, 5000); // Refresh teams every 5 seconds
-    return () => clearInterval(intervalId);
-  }, []);
+  // Starts the game timer and synchronizes state.
+  const handleStartGame = () => {
+    setTimer(420); // Reset to 7:00
+    setGameActive(true);
+    setGameEnded(false);
+    timerChannel.postMessage({ timer: 10, gameActive: true, gameEnded: false });
+  };
 
+  // Ends the game manually and resets the timer.
+  const handleManualEnd = () => {
+    setTimer(420); // Reset to 7:00
+    setGameActive(false);
+    setGameEnded(true);
+    timerChannel.postMessage({
+      timer: 420,
+      gameActive: false,
+      gameEnded: true,
+    });
+  };
+
+  // Sends a request to add a new team.
   const createTeam = async () => {
     try {
       const response = await fetch("/api/teams", {
@@ -60,6 +129,9 @@ const ControlPage: React.FC = () => {
 
       if (response.ok) {
         fetchTeams(); // Refresh teams after creation
+        setTeamName(""); // Clear the team name input
+        setTeamPassword(""); // Clear the team password input
+        setMasterKey(""); // Clear the master key input (if applicable)
         setActivePanel(null); // Close panel
       } else {
         const error = await response.json();
@@ -71,9 +143,10 @@ const ControlPage: React.FC = () => {
     }
   };
 
+  // Sends a request to remove a team.
   const removeTeam = async () => {
-    if (!teamName || !teamPassword) {
-      alert("Please enter both the team name and password.");
+    if (!teamName || (!teamPassword && !masterKey)) {
+      alert("Please enter the team name and either a password or master key.");
       return;
     }
 
@@ -81,12 +154,20 @@ const ControlPage: React.FC = () => {
       const response = await fetch("/api/teams", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamName, password: teamPassword }),
+        body: JSON.stringify({
+          teamName,
+          password: teamPassword,
+          masterKey, // Include the master key in the request body
+        }),
       });
 
       if (response.ok) {
         fetchTeams(); // Refresh teams after deletion
+        setTeamName(""); // Clear the team name input
+        setTeamPassword(""); // Clear the team password input
+        setMasterKey(""); // Clear the master key input (if applicable)
         setActivePanel(null); // Close panel
+        alert("Team removed successfully.");
       } else {
         const error = await response.json();
         alert(`Error: ${error.message}`);
@@ -97,18 +178,37 @@ const ControlPage: React.FC = () => {
     }
   };
 
-  const handleTeamOrderUpdate = async (action: "win" | "draw", winner: string | null) => {
+  // Manges the create/add team panels visibiilty and input fields.
+  const closePanel = () => {
+    setActivePanel(null);
+    setTeamName("");
+    setPassword("");
+    setTeamId("");
+    setTeamPassword("");
+    setMasterKey("");
+  };
+
+  // Updates team positions and streaks based on the game outcome.
+  const handleTeamOrderUpdate = async (
+    action: "win" | "draw",
+    winner: string | null
+  ) => {
     let updatedTeams = [...teams];
     let updatedStreak = teamAStreak;
-  
-    const resetAll = action === "draw" || (action === "win" && winner !== updatedTeams[0]?.teamName);
+
+    const resetAll =
+      action === "draw" ||
+      (action === "win" && winner !== updatedTeams[0]?.teamName);
 
     if (action === "win" && winner) {
       const winningTeam = updatedTeams.find((team) => team.teamName === winner);
       if (winningTeam) {
         // Increment or reset streak
-        updatedStreak = winningTeam.teamName === updatedTeams[0].teamName ? updatedStreak + 1 : 1;
-  
+        updatedStreak =
+          winningTeam.teamName === updatedTeams[0].teamName
+            ? updatedStreak + 1
+            : 1;
+
         // Reorder teams
         updatedTeams = updatedTeams.filter((team) => team.teamName !== winner);
         const secondTeam = updatedTeams.shift(); // Remove the first team
@@ -120,23 +220,23 @@ const ControlPage: React.FC = () => {
       const [teamA, teamB] = updatedTeams.splice(0, 2); // Get top two teams
       updatedTeams.push(teamB, teamA); // Swap and move to the end
     }
-  
+
     setTeams(updatedTeams);
     setTeamAStreak(updatedStreak);
-  
+
     // Prepare data for API
     const orderedTeams = updatedTeams.map((team, index) => ({
       id: team.id,
       position: index + 1,
     }));
 
-    console.log('Sending update to API:', {
+    console.log("Sending update to API:", {
       orderedTeams,
       teamName: winner,
       streak: updatedStreak,
       resetAll,
     });
-  
+
     try {
       // Update positions and streak in the backend
       const response = await fetch("/api/teams", {
@@ -151,85 +251,112 @@ const ControlPage: React.FC = () => {
           resetAll,
         }),
       });
-  
+
       if (!response.ok) {
-        throw new Error("Failed to update team positions or streak in the database");
+        throw new Error(
+          "Failed to update team positions or streak in the database"
+        );
       }
-  
+
       console.log("Team positions and streak updated successfully");
     } catch (error) {
       console.error("Error updating team positions or streak:", error);
     }
-  
+
     setConfirmationVisible(false);
     setSelectedWinner(null);
     setSelectedAction(null);
-  };  
+  };
 
-  const showConfirmationPanel = (action: "win" | "draw", winner: string | null) => {
+  // Manage the confirmation panel's visibility.
+  const showConfirmationPanel = (
+    action: "win" | "draw",
+    winner: string | null
+  ) => {
     setSelectedAction(action);
     setSelectedWinner(winner);
     setConfirmationVisible(true);
   };
 
+  // Manage the confirmation panel's visibility.
   const closeConfirmationPanel = () => {
     setConfirmationVisible(false);
     setSelectedWinner(null);
     setSelectedAction(null);
   };
 
-// Utility function to use unused variables
-function useUnusedVariables(...vars: unknown[]): void {
-  // Do nothing, just reference the variables
-  vars.forEach(() => {});
-}
+  // Utility function to use unused variables
+  function useUnusedVariables(...vars: unknown[]): void {
+    // Do nothing, just reference the variables
+    vars.forEach(() => {});
+  }
+
+  useUnusedVariables(teamId);
 
   return (
     <div className="flex flex-col justify-evenly items-center min-h-screen bg-gray-50">
+      {/* Red Flashing Indicator */}
+      {gameEnded && timer == 0 && (
+        <div className="absolute inset-0 bg-red-600 opacity-50 animate-pulse flex items-center justify-center z-0"></div>
+      )}
+
       {/* Timer and Status Text */}
       <div className="text-center mt-0">
         <div className="text-8xl font-semibold">GAME STATUS</div>
         <div className="border-t-4 border-black my-6 w-3/4 mx-auto"></div>
-        <div className="text-9xl font-bold leading-none">{timer}</div>
+        <div className="text-9xl font-bold leading-none">
+          {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
+        </div>
       </div>
 
-      {/* Pills for Top Two Teams */}
-      <div className="flex justify-center items-center w-full max-w-4xl mt-0 mb-20">
-        {teams.length >= 2 ? (
-          <>
-            <button
-              onClick={() => showConfirmationPanel("win", teams[0].teamName)}
-              className="flex-1 py-10 text-6xl font-bold rounded-l-full border bg-gray-200 hover:bg-gray-300"
-              style={{ minWidth: "350px", minHeight: "140px" }} // Adjusted size for pills
-            >
-              {teams[0].teamName}
-            </button>
-            <button
-              onClick={() => showConfirmationPanel("draw", null)}
-              className="flex-1 py-10 text-6xl font-bold border bg-gray-200 hover:bg-gray-300"
-              style={{ minWidth: "350px", minHeight: "140px" }} // Adjusted size for pills
-            >
-              Draw
-            </button>
-            <button
-              onClick={() => showConfirmationPanel("win", teams[1].teamName)}
-              className="flex-1 py-10 text-6xl font-bold rounded-r-full border bg-gray-200 hover:bg-gray-300"
-              style={{ minWidth: "350px", minHeight: "140px" }} // Adjusted size for pills
-            >
-              {teams[1].teamName}
-            </button>
-          </>
-        ) : (
-          <p className="text-xl font-semibold">Loading teams...</p>
-        )}
-      </div>
+      {/* Pill Buttons for Team Selection */}
+      {(gameActive || timer == 0) && (
+        <div className="flex justify-center items-center w-full max-w-4xl mb-20 z-10">
+          {teams.length >= 2 ? (
+            <>
+              <button
+                onClick={() => showConfirmationPanel("win", teams[0].teamName)}
+                className="flex-1 py-10 text-5xl font-bold rounded-l-full border bg-gray-200 hover:bg-gray-300"
+              >
+                {teams[0].teamName}
+              </button>
+              <button
+                onClick={() => showConfirmationPanel("draw", null)}
+                className="flex-1 py-10 text-5xl font-bold border bg-gray-200 hover:bg-gray-300"
+              >
+                Draw
+              </button>
+              <button
+                onClick={() => showConfirmationPanel("win", teams[1].teamName)}
+                className="flex-1 py-10 text-5xl font-bold rounded-r-full border bg-gray-200 hover:bg-gray-300"
+              >
+                {teams[1].teamName}
+              </button>
+            </>
+          ) : (
+            <p className="text-xl font-semibold">Loading teams...</p>
+          )}
+        </div>
+      )}
 
+      {/* Start Game Button */}
+      {!gameActive && !(timer == 0) && (
+        <button
+          onClick={handleStartGame}
+          className="mt-0 mb-20 px-10 py-6 text-8xl font-bold bg-green-500 text-white rounded-lg hover:bg-green-600"
+        >
+          Start Game
+        </button>
+      )}
 
       {/* Confirmation Panel */}
       {confirmationVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded shadow-lg w-3/4 md:w-1/2 max-w-lg">
-            <button onClick={closeConfirmationPanel} className="absolute top-4 right-4">
+            <button
+              onClick={closeConfirmationPanel}
+              className="absolute top-4 right-4"
+            >
               ×
             </button>
             <h2 className="text-2xl font-semibold mb-6">
@@ -245,7 +372,10 @@ function useUnusedVariables(...vars: unknown[]): void {
                 Cancel
               </button>
               <button
-                onClick={() => handleTeamOrderUpdate(selectedAction!, selectedWinner)}
+                onClick={() => {
+                  handleTeamOrderUpdate(selectedAction!, selectedWinner);
+                  handleManualEnd();
+                }}
                 className="px-4 py-2 bg-blue-500 text-white rounded"
               >
                 Confirm
@@ -255,7 +385,7 @@ function useUnusedVariables(...vars: unknown[]): void {
         </div>
       )}
 
-      {/* Add or Remove Panel */}
+      {/* Plus Minus Buttons */}
       <div className="relative">
         {/* Remove Team Button */}
         <div className="absolute bottom-0 right-80">
@@ -278,6 +408,7 @@ function useUnusedVariables(...vars: unknown[]): void {
         </div>
       </div>
 
+      {/* Add or Remove Panel */}
       {activePanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded shadow-lg w-3/4 md:w-1/2 max-w-lg relative">
@@ -298,7 +429,8 @@ function useUnusedVariables(...vars: unknown[]): void {
               <div>
                 <input
                   type="text"
-                  placeholder="Enter team name"
+                  placeholder="Enter team name (12 characters or less)"
+                  maxLength={12}
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
                   className="w-full p-3 mb-4 border rounded"
@@ -322,7 +454,8 @@ function useUnusedVariables(...vars: unknown[]): void {
               <div>
                 <input
                   type="text"
-                  placeholder="Enter team name"
+                  placeholder="Enter team to remove"
+                  maxLength={12}
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
                   className="w-full p-3 mb-4 border rounded"
@@ -333,6 +466,13 @@ function useUnusedVariables(...vars: unknown[]): void {
                   maxLength={4}
                   value={teamPassword}
                   onChange={(e) => setTeamPassword(e.target.value)}
+                  className="w-full p-3 mb-4 border rounded"
+                />
+                <input
+                  type="text"
+                  placeholder="Enter master key (optional)"
+                  value={masterKey}
+                  onChange={(e) => setMasterKey(e.target.value)}
                   className="w-full p-3 mb-4 border rounded"
                 />
                 <button

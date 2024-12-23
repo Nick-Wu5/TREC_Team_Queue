@@ -2,13 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Root color variables */
+/* === Root Variables === */
 :root {
-  --background: #F5F5F5;
+  --background: #f5f5f5;
   --foreground: #171717;
 }
 
-/* Global body styling */
+/* === Global Reset and Body Styling === */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent unexpected scrolling */
+  height: 100%;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
@@ -19,39 +27,48 @@ button {
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
 }
 
-/* Utility classes */
+#root,
+.main-container {
+  min-height: 100vh; /* Ensures the container takes the full height */
+  overflow: hidden; /* Prevent content overflow */
+}
+
+/* === Utility Classes === */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .no-shadow {
+    box-shadow: none !important;
+  }
 }
 
-/* Capsule styling */
+/* === Capsule Component Styling === */
 .capsule {
   width: 402px;
   height: 70px;
-  margin: 5px; /* Optional: spacing between capsules */
+  margin: 5px;
   font-size: 48px;
   color: black;
-  background-color: #EBD99F;
+  background-color: #ebd99f;
   border-radius: 15px;
   display: flex; /* Use flexbox */
   justify-content: center;
   align-items: center;
   flex-shrink: 0; /* Prevent shrinking */
-  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25)); /* Add drop shadow */
+  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
 }
 
-/* Main container styling */
+/* === Layout Styling === */
 .main-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 100vh; /* Full viewport height */
+  min-height: 100vh;
 }
 
-/* Team list container styling */
 .team-list-container {
   margin: 0 auto; /* Centers the team list within the flex layout */
   display: flex;
@@ -60,76 +77,88 @@ button {
   height: 600px;
 }
 
-/* Left section styling */
+/* === Footer Styling === */
 .left-section {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-top: 150px; /* Adjust independently for left section */
   margin-right: 180px;
+  margin-bottom: 0px;
 }
 
-/* Footer left image styling */
-.footer-image-left {
-  width: 50; /* Adjust size as needed */
-  height: auto;
-  margin-top: 8px; /* Space between text and image */
-}
-
-/* Clock display styling */
-.clock-display {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start; /* Align text to the left within the clock */
-}
-
-/* TREC text styling */
-.trec-text {
-  font-size: 48px;
-  font-weight: bold;
-  margin-bottom: -10px;
-}
-
-/* Time text styling */
-.time-text {
-  font-size: 36px;
-}
-
-/* Right section styling */
 .right-section {
   display: flex;
   align-items: center;
   justify-content: center;
   margin-top: 350px; /* Adjust independently for right section */
   margin-left: 200px;
+  margin-bottom: 0px;
 }
 
-/* Footer text styling */
+.footer-image-left {
+  width: 50;
+  height: auto;
+  margin-top: 8px;
+  margin-bottom: 0px;
+}
+
+.footer-image-right {
+  width: 50;
+  height: auto;
+  margin-left: auto;
+  margin-bottom: 0px;
+}
+
 .footer-text {
   font-size: 2rem; /* Equivalent to text-3xl in Tailwind */
   font-weight: bold;
   display: flex;
   flex-direction: column;
   align-items: start;
+  margin-bottom: 0px;
 }
 
-/* Footer right image styling */
-.footer-image-right {
-  width: 50; /* Adjust size as needed */
-  height: auto;
-  margin-left: auto;
+/* === Clock Display Styling === */
+.clock-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Align text to the left within the clock */
+  margin-bottom: 0px;
 }
 
-.no-shadow {
-  box-shadow: none !important;
+.trec-text {
+  font-size: 48px;
+  font-weight: bold;
+  margin-bottom: -10px;
 }
 
+.time-text {
+  font-size: 36px;
+}
+
+/* === Game Status Styling === */
 .game-status-line {
-  width: 350px; /* Adjust width as needed */
+  width: 350px;
   height: 4px;
   margin: 50px;
   background-color: black;
   margin: 0 auto; /* Centers the line */
   margin-top: 1rem; /* Adds space above the line */
   margin-bottom: 1rem;
+}
+
+/* === Animations === */
+.animate-pulse {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
