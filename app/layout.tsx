@@ -18,7 +18,7 @@ const koulen = localFont({
 
 // Define app metadata
 export const metadata: Metadata = {
-  title: "HammerTime",
+  title: "TREC Queue",
   description:
     "A dynamic team management and game control application built with Next.js for seamless real-time coordination and enhanced user experience for pickup soccer.",
 };
