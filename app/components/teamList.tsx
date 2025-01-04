@@ -30,7 +30,7 @@ const TeamList: React.FC<TeamListProps> = ({ teams, additionalTeamsCount }) => {
       {/* Conditionally render the "and x more teams..." capsule if there are additional teams */}
       {additionalTeamsCount > 0 && (
         <div className="flex-shrink-0">
-          <Capsule text={`and ${additionalTeamsCount} more teams...`} />
+          <Capsule text={`and ${additionalTeamsCount} more...`} />
         </div>
       )}
     </div>

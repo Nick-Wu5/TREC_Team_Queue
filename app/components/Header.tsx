@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps & { teamAStreak: number }> = ({
     <div className="header flex justify-center items-center w-full bg-gray-100 rounded">
       {/* Wrapper for left capsule and line */}
       <div className="flex items-center mr-4 relative">
-        {teamAStreak > 0 && <WinStreak streakCount={teamAStreak} />}
+        {teamAStreak > 1 && <WinStreak streakCount={teamAStreak} />}
         <Capsule text={selectedTeams.teamA} />
         <div
           className="h-1 w-20 bg-black ml-2"
@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps & { teamAStreak: number }> = ({
       {/* Centered Timer*/}
       <div className="flex flex-col items-center mx-1">
         <div
-          className="text-8xl font-bold leading-none"
+          className="timer text-8xl font-mono"
           style={{ filter: "drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))" }}
         >
           {time}

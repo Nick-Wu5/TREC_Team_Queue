@@ -14,13 +14,12 @@ import Image from "next/image";
  * the team order and a countdown timer while integrating with real-time updates
  * and a backend database. The page is styled and structured to enhance user experience for
  * managing pickup soccer within the TREC.
- *
+ *n
  * @returns {JSX.Element} The rendered home page component displaying team data and game status.
  */
 const timerChannel = new BroadcastChannel("game_timer_channel");
 
 export default function Home() {
-  const [teams, setTeams] = useState<Team[]>([]); // Stores the list of all teams fetched from the backend.
 
   const [selectedTeams, setSelectedTeams] = useState<{
     teamA: string;
@@ -119,14 +118,14 @@ export default function Home() {
   const additionalTeamsCount = teams.length - 7;
 
   return (
-    <div className="main-container flex flex-col min-h-screen p-5 sm:p-20">
+    <div className="main-container flex flex-col">
       {/* Red Flashing Indicator */}
       {gameEnded && timer == 0 && (
         <div className="absolute inset-0 bg-red-600 opacity-50 animate-pulse flex items-center justify-center z-0"></div>
       )}
 
       {/* Header */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mt-10">
         <Header
           selectedTeams={selectedTeams}
           time={`${Math.floor(timer / 60)}:${(timer % 60)

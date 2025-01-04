@@ -3,17 +3,21 @@ import localFont from "next/font/local";
 import "./styles/globals.css";
 
 // Load custom fonts
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
+const aurulentSansMono = localFont({
+  src: "./fonts/AurulentSansMono-Regular.otf",
+  variable: "--font-aurulent-mono",
 });
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
 });
-const koulen = localFont({
-  src: "./fonts/Koulen-Regular.ttf",
-  variable: "--font-koulen",
+const geistSans = localFont({
+  src: "./fonts/GeistVF.woff",
+  variable: "--font-geist-sans",
+});
+const noto = localFont({
+  src: "./fonts/NotoSansDisplay.ttf",
+  variable: "--font-noto",
 });
 
 // Define app metadata
@@ -32,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${koulen.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${aurulentSansMono.variable} ${noto.variable} font-sans antialiased`}
       >
         {children}
       </body>

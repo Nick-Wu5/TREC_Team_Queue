@@ -34,3 +34,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+app/login/page.tsx
+pages/api/teams.ts
+utils/supabase-js.js

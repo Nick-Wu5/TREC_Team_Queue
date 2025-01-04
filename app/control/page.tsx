@@ -297,7 +297,7 @@ const ControlPage: React.FC = () => {
       <div className="text-center mt-0">
         <div className="text-8xl font-semibold">GAME STATUS</div>
         <div className="border-t-4 border-black my-6 w-3/4 mx-auto"></div>
-        <div className="text-9xl font-bold leading-none">
+        <div className="text-9xl font-mono leading-none">
           {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
         </div>
       </div>
@@ -309,19 +309,19 @@ const ControlPage: React.FC = () => {
             <>
               <button
                 onClick={() => showConfirmationPanel("win", teams[0].teamName)}
-                className="flex-1 py-10 text-5xl font-bold rounded-l-full border bg-gray-200 hover:bg-gray-300"
+                className="flex-1 py-10 text-5xl rounded-l-full border bg-gray-200 hover:bg-gray-300"
               >
                 {teams[0].teamName}
               </button>
               <button
                 onClick={() => showConfirmationPanel("draw", null)}
-                className="flex-1 py-10 text-5xl font-bold border bg-gray-200 hover:bg-gray-300"
+                className="flex-1 py-10 text-5xl border bg-gray-200 hover:bg-gray-300"
               >
                 Draw
               </button>
               <button
                 onClick={() => showConfirmationPanel("win", teams[1].teamName)}
-                className="flex-1 py-10 text-5xl font-bold rounded-r-full border bg-gray-200 hover:bg-gray-300"
+                className="flex-1 py-10 text-5xl rounded-r-full border bg-gray-200 hover:bg-gray-300"
               >
                 {teams[1].teamName}
               </button>
@@ -336,7 +336,7 @@ const ControlPage: React.FC = () => {
       {!gameActive && !(timer == 0) && (
         <button
           onClick={handleStartGame}
-          className="mt-0 mb-20 px-10 py-6 text-8xl font-bold bg-green-500 text-white rounded-lg hover:bg-green-600"
+          className="mt-0 mb-20 px-10 py-6 text-8xl bg-green-500 text-white rounded-lg hover:bg-green-600"
         >
           Start Game
         </button>

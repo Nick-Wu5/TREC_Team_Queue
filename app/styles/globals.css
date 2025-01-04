@@ -20,7 +20,10 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-koulen), Arial, Helvetica, sans-serif;
+}
+
+input {
+  font-family: Arial;
 }
 
 button {
@@ -57,7 +60,9 @@ button {
   justify-content: center;
   align-items: center;
   flex-shrink: 0; /* Prevent shrinking */
-  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(
+    0px 4px 4px rgba(0, 0, 0, 0.25)
+  ); /* Apply box drop shadow */
 }
 
 /* === Layout Styling === */
@@ -125,16 +130,18 @@ button {
   flex-direction: column;
   align-items: flex-start; /* Align text to the left within the clock */
   margin-bottom: 0px;
+  width: 250px;
 }
 
 .trec-text {
-  font-size: 48px;
+  font-size: 36px;
   font-weight: bold;
   margin-bottom: -10px;
 }
 
 .time-text {
-  font-size: 36px;
+  font-size: 24px;
+  font-weight: normal;
 }
 
 /* === Game Status Styling === */

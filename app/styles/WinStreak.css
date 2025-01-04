@@ -5,7 +5,7 @@
   font-size: 3rem;
   position: absolute;
   top: -50px; /* Adjust to control vertical overlap */
-  left: -30px; /* Adjust to control horizontal overlap */
+  left: -40px; /* Adjust to control horizontal overlap */
   z-index: 10;
 }
 
@@ -26,8 +26,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-70%, -20%); /* Center the number over the icon */
-  font-weight: bold;
+  transform: translate(-63%, -20%); /* Center the number over the icon */
   font-size: 2rem;
 }
 
