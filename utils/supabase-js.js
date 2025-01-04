@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-require("dotenv").config({ path: ".env.local" });
 
 // Load environment variables for client-side use
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
