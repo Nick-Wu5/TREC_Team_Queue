@@ -12,7 +12,7 @@ import Image from "next/image";
  *
  * This component serves as the main user-facing page of the application. It dynamically displays
  * the team order and a countdown timer while integrating with real-time updates
- * and a backend database. The page is styled and structured to enhance user experience for
+ * and a backend database. The page is styled and sItructured to enhance user experience for
  * managing pickup soccer within the TREC.
  *n
  * @returns {JSX.Element} The rendered home page component displaying team data and game status.
@@ -20,7 +20,7 @@ import Image from "next/image";
 const timerChannel = new BroadcastChannel("game_timer_channel");
 
 export default function Home() {
-
+  const [teams, setTeams] = useState<Team[]>([]); // Stores the list of all teams fetched from the backend.
   const [selectedTeams, setSelectedTeams] = useState<{
     teamA: string;
     teamB: string;

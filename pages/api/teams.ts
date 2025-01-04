@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { supabase, initializeSupabaseClient } from "../../utils/supabase-js";
+import { supabase } from "../../utils/supabase-js";
 
 /**
  * API Endpoint: Team Management
@@ -26,9 +26,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("Request received:", req.method);
-  console.log("Authorization Header:", req.headers.authorization);
-
   try {
     if (req.method === "GET") {
       // Retrieves the list of teams, ordered by their `position`.
@@ -38,16 +35,6 @@ export default async function handler(
       // Adds a new team to the database.
       // Add a new team
       console.log("Handling POST request");
-
-      const authHeader = req.headers.authorization;
-      const token = authHeader?.split(" ")[1];
-
-      if (!token) {
-        return res.status(401).json({ error: "Authorization token missing" });
-      }
-
-      const supabaseServer = initializeSupabaseClient(token);
-
       const { teamName, password } = req.body;
 
       if (!teamName || !password) {
@@ -57,25 +44,22 @@ export default async function handler(
       }
 
       try {
-        const { data, error } = await supabaseServer.from("teams").insert([
-          {
-            teamName,
-            password,
-          },
-        ]);
+        const { data, error } = await supabase
+          .from("teams")
+          .insert([{ teamName, password }]);
 
+        // Debugging: Log Supabase response
         if (error) {
-          return res.status(403).json({
-            error: error.message || "Row-Level Security policy violation",
-          });
+          console.error("Supabase Error:", error);
+          throw error;
         }
 
+        console.log("Insert Success:", data);
         return res
           .status(201)
           .json({ message: "Team added successfully", team: data });
       } catch (error) {
-        console.error("Unexpected Error:", error);
-        return res.status(500).json({ error: "Unexpected server error" });
+        console.error("API Error:", error);
       }
     } else if (req.method === "DELETE") {
       // Removes a team using the team's name, password, or a master key for override.

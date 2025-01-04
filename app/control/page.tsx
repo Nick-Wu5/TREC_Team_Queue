@@ -352,7 +352,7 @@ const ControlPage: React.FC = () => {
             >
               ×
             </button>
-            <h2 className="text-2xl font-semibold mb-6">
+            <h2 className="text-2xl mb-6">
               {selectedAction === "win" && selectedWinner
                 ? `Confirm ${selectedWinner} won?`
                 : "Confirm Draw?"}
@@ -414,7 +414,7 @@ const ControlPage: React.FC = () => {
               ×
             </button>
 
-            <h2 className="text-2xl font-semibold mb-6">
+            <h2 className="text-2xl mb-6">
               {activePanel === "add" ? "Add Team" : "Remove Team"}
             </h2>
 
