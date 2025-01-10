@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import TeamList from "./components/teamList";
 import Header from "./components/Header";
 import ClockDisplay from "./components/ClockDisplay";
-import { supabase } from "../utils/supabase-js";
 import Image from "next/image";
 
 /**
