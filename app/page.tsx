@@ -70,15 +70,14 @@ export default function Home() {
         const teamA = teams[0]?.teamName;
         if (!teamA) return;
 
-        const { data, error } = await supabase
-          .from("teams")
-          .select("streak")
-          .eq("teamName", teamA);
+        const response = await fetch("/api/teams");
 
-        if (error) {
-          console.error("Error fetching streak:", error.message);
+        if (!response.ok) {
+          console.error("Error fetching streaks:", response.statusText);
           return;
         }
+
+        const data = await response.json();
 
         if (data && data.length > 0) {
           setTeamAStreak(data[0].streak);
@@ -86,7 +85,7 @@ export default function Home() {
           setTeamAStreak(0); // Default to 0 if no streak is found
         }
       } catch (err) {
-        console.error("Error fetching streak:", err);
+        console.error("Error fetching streaks line 99", err);
       }
     };
 

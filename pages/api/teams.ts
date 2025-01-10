@@ -55,9 +55,7 @@ export default async function handler(
         }
 
         console.log("Insert Success:", data);
-        return res
-          .status(201)
-          .json({ message: "Team added successfully", team: data });
+        return res.status(201).json({ message: "Team added successfully" });
       } catch (error) {
         console.error("API Error:", error);
       }
@@ -74,8 +72,6 @@ export default async function handler(
 
         // Define the master key securely (use an environment variable)
         const MASTER_KEY = process.env.MASTER_KEY;
-        console.log("Master Key:", process.env.MASTER_KEY);
-        console.log("Inputted Master Key:", masterKey);
 
         if (masterKey === MASTER_KEY) {
           // Master key is valid, skip password check

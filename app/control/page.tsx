@@ -99,7 +99,7 @@ const ControlPage: React.FC = () => {
 
   // Starts the game timer and synchronizes state.
   const handleStartGame = () => {
-    setTimer(420); // Reset to 7:00
+    setTimer(10); // Reset to 7:00
     setGameActive(true);
     setGameEnded(false);
     timerChannel.postMessage({
@@ -130,12 +130,16 @@ const ControlPage: React.FC = () => {
         body: JSON.stringify({ teamName, password }),
       });
 
+      const result = await response.json(); // Parse JSON response
+
       if (response.ok) {
         fetchTeams(); // Refresh teams after creation
         setTeamName(""); // Clear the team name input
         setPassword(""); // Clear the team password input
         setActivePanel(null); // Close panel
+        console.log("Success:", result.message); // Log success message
       } else {
+        console.error("Error:", result.error || "Unknown error occurred");
         const error = await response.json();
         alert(`Error: ${error.message}`);
       }
