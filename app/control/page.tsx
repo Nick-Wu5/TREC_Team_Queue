@@ -11,11 +11,10 @@ import React, { useEffect, useState } from "react";
  *
  * @returns {JSX.Element} The rendered control page UI.
  */
-const timerChannel = new BroadcastChannel("game_timer_channel"); // Synchronizes timer and game state updates across multiple views.
 
 const ControlPage: React.FC = () => {
   const [activePanel, setActivePanel] = useState<"add" | "remove" | null>(null); // Controls which action panel (add/remove) is active.
-  const [timer, setTimer] = useState(420); // Tracks the remaining time for the game in seconds.
+  const [timer, setTimer] = useState<number>(420); // Default 7:00
   const [gameActive, setGameActive] = useState(false); // Flags for the game's active and end states.
   const [gameEnded, setGameEnded] = useState(false);
   const [teamName, setTeamName] = useState(""); // Form inputs for team actions.
@@ -30,8 +29,11 @@ const ControlPage: React.FC = () => {
   );
   const [teamAStreak, setTeamAStreak] = useState(0); // Tracks the win streak of the first team in the list.
 
+  const broadcastChannel = new BroadcastChannel("game_state_channel");
+
   // Initial fetch and periodic updates
   useEffect(() => {
+    fetchGameState();
     fetchTeams();
     const intervalId = setInterval(fetchTeams, 1000); // Refresh teams every 5 seconds
     return () => clearInterval(intervalId);
@@ -41,13 +43,31 @@ const ControlPage: React.FC = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    const stopGame = () => {
+    const updateGameState = async (newTime: number) => {
+      await fetch("/api/gameState", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          timer: newTime,
+          game_active: gameActive,
+          game_ended: gameEnded,
+        }),
+      });
+
+      // Broadcast the updated state to other pages
+      broadcastChannel.postMessage({
+        timer: newTime,
+        gameEnded: gameEnded,
+      });
+    };
+
+    const stopGame = async () => {
       clearInterval(interval);
       setGameEnded(true);
       setGameActive(false);
-      timerChannel.postMessage({
+      await updateGameState(0); // Sync final state
+      broadcastChannel.postMessage({
         timer: 0,
-        gameActive: false,
         gameEnded: true,
       });
     };
@@ -57,15 +77,11 @@ const ControlPage: React.FC = () => {
         setTimer((prev) => {
           const newTime = prev - 1;
 
-          // Post timer updates to other screens
-          timerChannel.postMessage({
-            timer: newTime,
-            gameActive: true,
-            gameEnded: false,
-          });
+          // Sync the timer with the database
+          updateGameState(newTime);
 
           if (newTime <= 0) {
-            stopGame(); // Game ends naturally
+            stopGame();
             return 0;
           }
 
@@ -78,6 +94,13 @@ const ControlPage: React.FC = () => {
       clearInterval(interval);
     };
   }, [gameActive, gameEnded]);
+
+  // Close the BroadcastChannel only when the component unmounts
+  useEffect(() => {
+    return () => {
+      broadcastChannel.close();
+    };
+  }, []);
 
   // Fetches the team list from the backend periodically.
   const fetchTeams = async () => {
@@ -97,28 +120,105 @@ const ControlPage: React.FC = () => {
     }
   };
 
-  // Starts the game timer and synchronizes state.
-  const handleStartGame = () => {
-    setTimer(10); // Reset to 7:00
-    setGameActive(true);
-    setGameEnded(false);
-    timerChannel.postMessage({
-      timer: 420,
-      gameActive: true,
-      gameEnded: false,
-    });
+  // Fetches the game state from the backend.
+  const fetchGameState = async () => {
+    try {
+      const response = await fetch("/api/gameState", {
+        method: "GET", // Ensure this matches the handler
+      });
+
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      if (!response.ok) {
+        console.error(
+          "Error fetching game state:",
+          response.statusText,
+          response.status
+        );
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Fetched game state:", data);
+      setTimer(data.timer);
+      setGameActive(data.game_active);
+      setGameEnded(data.game_ended);
+    } catch (error) {
+      console.error("Failed to fetch game state (network issue):", error);
+    }
   };
 
-  // Ends the game manually and resets the timer.
-  const handleManualEnd = () => {
-    setTimer(420); // Reset to 7:00
-    setGameActive(false);
-    setGameEnded(true);
-    timerChannel.postMessage({
-      timer: 420,
-      gameActive: false,
-      gameEnded: true,
-    });
+  // Starts the game by updating the game state in the backend.
+  const handleStartGame = async () => {
+    try {
+      const response = await fetch("/api/gameState?action=start", {
+        method: "PUT",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to start the game");
+      }
+
+      // Fetch the updated game state after starting
+      const gameStateResponse = await fetch("/api/gameState");
+      if (!gameStateResponse.ok) {
+        throw new Error("Failed to fetch updated game state");
+      }
+      const updatedGameState = await gameStateResponse.json();
+
+      // Update local state with the new values
+      setTimer(updatedGameState.timer);
+      setGameActive(updatedGameState.game_active);
+      setGameEnded(updatedGameState.game_ended);
+
+      // Broadcast the updated state
+      broadcastChannel.postMessage({
+        timer: updatedGameState.timer,
+        gameActive: updatedGameState.game_active,
+        gameEnded: updatedGameState.game_ended,
+      });
+
+      console.log("Game started successfully:", updatedGameState);
+    } catch (error) {
+      console.error("Error starting game:", error);
+    }
+  };
+
+  // Ends the game by updating the game state in the backend.
+  const handleManualEnd = async () => {
+    try {
+      const response = await fetch("/api/gameState?action=end", {
+        method: "PUT",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to end the game");
+      }
+
+      // Fetch the updated game state after ending
+      const gameStateResponse = await fetch("/api/gameState");
+      if (!gameStateResponse.ok) {
+        throw new Error("Failed to fetch updated game state");
+      }
+      const updatedGameState = await gameStateResponse.json();
+
+      // Update local state with the new values
+      setTimer(updatedGameState.timer);
+      setGameActive(updatedGameState.game_active);
+      setGameEnded(updatedGameState.game_ended);
+
+      // Broadcast the updated state
+      broadcastChannel.postMessage({
+        timer: updatedGameState.timer,
+        gameActive: updatedGameState.game_active,
+        gameEnded: updatedGameState.game_ended,
+      });
+
+      console.log("Game ended successfully:", updatedGameState);
+    } catch (error) {
+      console.error("Error ending game:", error);
+    }
   };
 
   // Sends a request to add a new team.

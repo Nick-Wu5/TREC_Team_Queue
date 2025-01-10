@@ -16,7 +16,6 @@ import Image from "next/image";
  *n
  * @returns {JSX.Element} The rendered home page component displaying team data and game status.
  */
-const timerChannel = new BroadcastChannel("game_timer_channel");
 
 export default function Home() {
   const [teams, setTeams] = useState<Team[]>([]); // Stores the list of all teams fetched from the backend.
@@ -28,7 +27,7 @@ export default function Home() {
     teamB: "",
   }); // Holds the currently playing teams (Team A and Team B).
   const [teamAStreak, setTeamAStreak] = useState(0); // Tracks the win streak for the reigning team.
-  const [timer, setTimer] = useState(420); // Manages the game timer (in seconds) default 7 minutes.
+  const [timer, setTimer] = useState<number>(420); // Manages the game timer (in seconds) default 7 minutes.
   const [gameEnded, setGameEnded] = useState(false);
 
   // Fetch teams from the backend
@@ -48,7 +47,7 @@ export default function Home() {
     }
   };
 
-  // Fetch teams on component mount and set interval
+  // // Fetch teams on component mount and set interval
   useEffect(() => {
     fetchTeams();
     const intervalId = setInterval(fetchTeams, 1000); // Fetch every second
@@ -97,17 +96,19 @@ export default function Home() {
 
   // Listen for timer updates from the Control Page
   useEffect(() => {
-    const handleTimerMessage = (event: MessageEvent) => {
-      const { timer: newTimer, gameEnded: hasEnded } = event.data;
-      setTimer(newTimer);
-      setGameEnded(hasEnded);
+    const broadcastChannel = new BroadcastChannel("game_state_channel");
+
+    const handleMessage = (event: MessageEvent) => {
+      const { timer, gameEnded } = event.data;
+      setTimer(timer);
+      setGameEnded(gameEnded);
     };
 
-    timerChannel.addEventListener("message", handleTimerMessage);
+    broadcastChannel.addEventListener("message", handleMessage);
 
     return () => {
-      // Remove the event listener only, don't close the channel
-      timerChannel.removeEventListener("message", handleTimerMessage);
+      broadcastChannel.removeEventListener("message", handleMessage);
+      broadcastChannel.close();
     };
   }, []);
 
