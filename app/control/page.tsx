@@ -29,13 +29,55 @@ const ControlPage: React.FC = () => {
   );
   const [teamAStreak, setTeamAStreak] = useState(0); // Tracks the win streak of the first team in the list.
 
-  const broadcastChannel = new BroadcastChannel("game_state_channel");
-
   // Initial fetch and periodic updates
   useEffect(() => {
+    // Fetches the team list from the backend periodically.
+    const fetchTeams = async () => {
+      try {
+        const response = await fetch("/api/teams");
+        if (!response.ok) {
+          console.error("Error fetching teams:", response.statusText);
+          return;
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setTeams(data);
+          console.log("Fetched teams:", data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch teams:", error);
+      }
+    };
+
+    // Fetches the game state from the backend.
+    const fetchGameState = async () => {
+      try {
+        const response = await fetch("/api/gameState", {
+          method: "GET", // Ensure this matches the handler
+        });
+
+        if (!response.ok) {
+          console.error(
+            "Error fetching game state:",
+            response.statusText,
+            response.status
+          );
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched game state:", data);
+        setTimer(data.timer);
+        setGameActive(data.game_active);
+        setGameEnded(data.game_ended);
+      } catch (error) {
+        console.error("Failed to fetch game state (network issue):", error);
+      }
+    };
+
     fetchGameState();
     fetchTeams();
-    const intervalId = setInterval(fetchTeams, 1000); // Refresh teams every 5 seconds
+    const intervalId = setInterval(fetchTeams, 1000); // Refresh teams every second
     return () => clearInterval(intervalId);
   }, []);
 
@@ -53,12 +95,6 @@ const ControlPage: React.FC = () => {
           game_ended: gameEnded,
         }),
       });
-
-      // Broadcast the updated state to other pages
-      broadcastChannel.postMessage({
-        timer: newTime,
-        gameEnded: gameEnded,
-      });
     };
 
     const stopGame = async () => {
@@ -66,10 +102,6 @@ const ControlPage: React.FC = () => {
       setGameEnded(true);
       setGameActive(false);
       await updateGameState(0); // Sync final state
-      broadcastChannel.postMessage({
-        timer: 0,
-        gameEnded: true,
-      });
     };
 
     if (gameActive && !gameEnded) {
@@ -95,60 +127,6 @@ const ControlPage: React.FC = () => {
     };
   }, [gameActive, gameEnded]);
 
-  // Close the BroadcastChannel only when the component unmounts
-  useEffect(() => {
-    return () => {
-      broadcastChannel.close();
-    };
-  }, []);
-
-  // Fetches the team list from the backend periodically.
-  const fetchTeams = async () => {
-    try {
-      const response = await fetch("/api/teams");
-      if (!response.ok) {
-        console.error("Error fetching teams:", response.statusText);
-        return;
-      }
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setTeams(data);
-        console.log("Fetched teams:", data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch teams:", error);
-    }
-  };
-
-  // Fetches the game state from the backend.
-  const fetchGameState = async () => {
-    try {
-      const response = await fetch("/api/gameState", {
-        method: "GET", // Ensure this matches the handler
-      });
-
-      console.log("Response status:", response.status);
-      console.log("Response headers:", response.headers);
-
-      if (!response.ok) {
-        console.error(
-          "Error fetching game state:",
-          response.statusText,
-          response.status
-        );
-        return;
-      }
-
-      const data = await response.json();
-      console.log("Fetched game state:", data);
-      setTimer(data.timer);
-      setGameActive(data.game_active);
-      setGameEnded(data.game_ended);
-    } catch (error) {
-      console.error("Failed to fetch game state (network issue):", error);
-    }
-  };
-
   // Starts the game by updating the game state in the backend.
   const handleStartGame = async () => {
     try {
@@ -171,13 +149,6 @@ const ControlPage: React.FC = () => {
       setTimer(updatedGameState.timer);
       setGameActive(updatedGameState.game_active);
       setGameEnded(updatedGameState.game_ended);
-
-      // Broadcast the updated state
-      broadcastChannel.postMessage({
-        timer: updatedGameState.timer,
-        gameActive: updatedGameState.game_active,
-        gameEnded: updatedGameState.game_ended,
-      });
 
       console.log("Game started successfully:", updatedGameState);
     } catch (error) {
@@ -208,13 +179,6 @@ const ControlPage: React.FC = () => {
       setGameActive(updatedGameState.game_active);
       setGameEnded(updatedGameState.game_ended);
 
-      // Broadcast the updated state
-      broadcastChannel.postMessage({
-        timer: updatedGameState.timer,
-        gameActive: updatedGameState.game_active,
-        gameEnded: updatedGameState.game_ended,
-      });
-
       console.log("Game ended successfully:", updatedGameState);
     } catch (error) {
       console.error("Error ending game:", error);
@@ -233,7 +197,6 @@ const ControlPage: React.FC = () => {
       const result = await response.json(); // Parse JSON response
 
       if (response.ok) {
-        fetchTeams(); // Refresh teams after creation
         setTeamName(""); // Clear the team name input
         setPassword(""); // Clear the team password input
         setActivePanel(null); // Close panel
@@ -268,7 +231,6 @@ const ControlPage: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchTeams(); // Refresh teams after deletion
         setTeamName(""); // Clear the team name input
         setTeamPassword(""); // Clear the team password input
         setMasterKey(""); // Clear the master key input (if applicable)

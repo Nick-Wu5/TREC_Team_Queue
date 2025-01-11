@@ -71,7 +71,6 @@ export default async function handler(
         console.error("Error ending game:", error);
         return res.status(500).json({ error: "Failed to end game" });
       }
-
       return res.status(200).json({ message: "Game ended successfully" });
     }
 

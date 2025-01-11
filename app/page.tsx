@@ -30,36 +30,35 @@ export default function Home() {
   const [timer, setTimer] = useState<number>(420); // Manages the game timer (in seconds) default 7 minutes.
   const [gameEnded, setGameEnded] = useState(false);
 
-  // Fetch teams from the backend
-  const fetchTeams = async () => {
-    try {
-      const response = await fetch("/api/teams");
-      if (!response.ok) {
-        console.error("Error fetching teams:", response.statusText);
-        return;
-      }
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setTeams(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch teams:", error);
-    }
-  };
-
-  // // Fetch teams on component mount and set interval
+  // Fetch teams on component mount and set interval
   useEffect(() => {
+    // Fetch teams from the backend
+    const fetchTeams = async () => {
+      try {
+        const response = await fetch("/api/teams");
+        if (!response.ok) {
+          console.error("Error fetching teams:", response.statusText);
+          return;
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setTeams(data);
+          if (data.length > 1) {
+            setSelectedTeams({
+              teamA: data[0].teamName,
+              teamB: data[1].teamName,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch teams:", error);
+      }
+    };
+
     fetchTeams();
     const intervalId = setInterval(fetchTeams, 1000); // Fetch every second
     return () => clearInterval(intervalId);
   }, []);
-
-  // Update selected teams when teams change
-  useEffect(() => {
-    if (teams.length > 1) {
-      setSelectedTeams({ teamA: teams[0].teamName, teamB: teams[1].teamName });
-    }
-  }, [teams]);
 
   // Update win streak upon game completion
   useEffect(() => {
@@ -92,24 +91,42 @@ export default function Home() {
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, [teams[0]?.teamName]); // Dependency on teamA
+  }, [teams[0]?.teamName]);
 
-  // Listen for timer updates from the Control Page
+  // Timer logic
   useEffect(() => {
-    const broadcastChannel = new BroadcastChannel("game_state_channel");
-
-    const handleMessage = (event: MessageEvent) => {
-      const { timer, gameEnded } = event.data;
-      setTimer(timer);
-      setGameEnded(gameEnded);
+    const stopGame = async () => {
+      clearInterval(interval);
+      setGameEnded(true);
     };
 
-    broadcastChannel.addEventListener("message", handleMessage);
+    const fetchTime = async () => {
+      try {
+        const response = await fetch("/api/gameState");
+        if (!response.ok) {
+          console.error("Failed to fetch time:", response.statusText);
+          return;
+        }
+        const data = await response.json();
 
-    return () => {
-      broadcastChannel.removeEventListener("message", handleMessage);
-      broadcastChannel.close();
+        // Update the timer and gameEnded state
+        setTimer(data.timer);
+        setGameEnded(data.game_ended);
+
+        // Handle game end logic
+        if (data.timer <= 0 && !data.game_ended) {
+          setGameEnded(true); // Set gameEnded to true
+        } else if (data.timer > 0 && data.game_active) {
+          setGameEnded(false); // Reset gameEnded when a new game starts
+        }
+      } catch (error) {
+        console.error("Error fetching game state:", error);
+      }
     };
+
+    fetchTime();
+    const interval = setInterval(fetchTime, 1000); // Poll every second
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
 
   // Prepare teams for being displayed
@@ -119,7 +136,7 @@ export default function Home() {
   return (
     <div className="main-container flex flex-col">
       {/* Red Flashing Indicator */}
-      {gameEnded && timer == 0 && (
+      {gameEnded && timer <= 0 && (
         <div className="absolute inset-0 bg-red-600 opacity-50 animate-pulse flex items-center justify-center z-0"></div>
       )}
 
