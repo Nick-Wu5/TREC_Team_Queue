@@ -50,7 +50,7 @@ export default async function handler(
     if (action === "start") {
       const { error } = await supabase
         .from("game_state")
-        .update({ timer: 420, game_active: true, game_ended: false })
+        .update({ timer: 10, game_active: true, game_ended: false })
         .eq("id", 1);
 
       if (error) {

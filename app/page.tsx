@@ -95,11 +95,6 @@ export default function Home() {
 
   // Timer logic
   useEffect(() => {
-    const stopGame = async () => {
-      clearInterval(interval);
-      setGameEnded(true);
-    };
-
     const fetchTime = async () => {
       try {
         const response = await fetch("/api/gameState");
