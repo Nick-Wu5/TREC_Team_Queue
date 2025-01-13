@@ -91,7 +91,7 @@ export default function Home() {
 
     // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, [teams[0]?.teamName]);
+  }, [teams]); // Teams dependency ensures the effect runs when teams are updated
 
   // Timer logic
   useEffect(() => {
