@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/WinStreak.css";
 import Image from "next/image";
+import { relative } from "path";
 
 /**
  * WinStreak component visually displays a team's win streak with an animated
@@ -30,7 +31,14 @@ const WinStreak: React.FC<WinStreakProps> = ({ streakCount }) => {
   return (
     <div className={`win-streak ${animate ? "animate" : ""}`}>
       <div className="fire-icon-container">
-        <Image src="/fire-icon.png" alt="streakIcon" className="fire-icon" />
+        <Image
+          src="/fire-icon.png"
+          alt="streakIcon"
+          className="fire-icon"
+          width={100}
+          height={100}
+          layout="intrinsic"
+        />
         <span className="streak-number">{streakCount}</span>
       </div>
     </div>

@@ -4,8 +4,8 @@
   align-items: center;
   font-size: 3rem;
   position: absolute;
-  top: -50px; /* Adjust to control vertical overlap */
-  left: -40px; /* Adjust to control horizontal overlap */
+  top: -20px; /* Adjust to control vertical overlap */
+  left: -10px; /* Adjust to control horizontal overlap */
   z-index: 10;
 }
 
@@ -16,7 +16,7 @@
 }
 
 .fire-icon {
-  transform: scale(0.5);
+  transform: scale(0.75);
   margin-right: 0.5rem;
   display: inline-block;
 }
