@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/WinStreak.css";
 import Image from "next/image";
-import { relative } from "path";
 
 /**
  * WinStreak component visually displays a team's win streak with an animated
