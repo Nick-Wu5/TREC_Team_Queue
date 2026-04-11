@@ -1,30 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Load environment variables for client-side use
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-console.log("Email:", process.env.SUPABASE_USER_EMAIL);
-console.log("Password:", process.env.SUPABASE_USER_PASSWORD);
+const supabaseUrl = process.env.NEXT_PUBLIC_NEWDB_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_NEWDB_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables");
+  throw new Error("Missing Supabase environment variables: NEXT_PUBLIC_NEWDB_SUPABASE_URL and NEXT_PUBLIC_NEWDB_SUPABASE_ANON_KEY must be set");
 }
 
-const loginUser = async () => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: process.env.SUPABASE_USER_EMAIL,
-    password: process.env.SUPABASE_USER_PASSWORD,
-  });
-
-  if (error) {
-    console.error("Login Error:", error.message);
-  } else {
-    console.log("User logged in:", data.user);
-    console.log("Session:", data.session);
-  }
-};
-
-loginUser();
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
