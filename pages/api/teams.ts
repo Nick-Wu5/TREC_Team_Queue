@@ -68,18 +68,31 @@ export default async function handler(
         return res.status(500).json({ error: "Failed to add team" });
       }
     } else if (req.method === "DELETE") {
-      // Removes a team using the team's name, password, or a master key for override.
       try {
-        const { teamname, password, masterKey } = req.body;
+        const { teamname, password, masterKey, clearAll } = req.body;
+
+        const MASTER_KEY = process.env.MASTER_KEY;
+
+        // Clear all teams with master key
+        if (clearAll) {
+          if (!MASTER_KEY || masterKey !== MASTER_KEY) {
+            return res.status(401).json({ message: "Invalid master key" });
+          }
+
+          const { error } = await supabase.from("teams").delete().neq("id", 0);
+          if (error) {
+            console.error("Error clearing all teams:", error);
+            return res.status(500).json({ message: "Failed to clear all teams" });
+          }
+
+          return res.status(200).json({ message: "All teams cleared" });
+        }
 
         if (!teamname || (!password && !masterKey)) {
           return res
             .status(400)
             .json({ message: "Team name and password are required" });
         }
-
-        // Define the master key securely (use an environment variable)
-        const MASTER_KEY = process.env.MASTER_KEY;
 
         if (MASTER_KEY && masterKey === MASTER_KEY) {
           // Master key is valid, skip password check

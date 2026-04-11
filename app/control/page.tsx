@@ -258,6 +258,48 @@ const ControlPage: React.FC = () => {
     }
   };
 
+  // Clears all teams and resets game state to default using the master key.
+  const cleanUpAll = async () => {
+    if (!masterKey) {
+      alert("Please enter the master key to clean up.");
+      return;
+    }
+
+    if (!confirm("This will remove ALL teams and reset the game state. Are you sure?")) {
+      return;
+    }
+
+    try {
+      const teamsRes = await fetch("/api/teams", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clearAll: true, masterKey }),
+      });
+
+      if (!teamsRes.ok) {
+        const err = await teamsRes.json();
+        alert(`Error clearing teams: ${err.message}`);
+        return;
+      }
+
+      const gameRes = await fetch("/api/gameState?action=reset", {
+        method: "PUT",
+      });
+
+      if (!gameRes.ok) {
+        alert("Teams cleared but failed to reset game state.");
+        return;
+      }
+
+      setMasterKey("");
+      setActivePanel(null);
+      alert("All teams cleared and game state reset.");
+    } catch (error) {
+      console.error("Clean up failed:", error);
+      alert("An error occurred during clean up.");
+    }
+  };
+
   // Manges the create/add team panels visibiilty and input fields.
   const closePanel = () => {
     setActivePanel(null);
@@ -548,9 +590,16 @@ const ControlPage: React.FC = () => {
                 />
                 <button
                   onClick={removeTeam}
-                  className="w-full p-3 bg-red-500 text-white rounded hover:bg-red-600"
+                  className="w-full p-3 bg-red-500 text-white rounded hover:bg-red-600 mb-3"
                 >
                   Remove Team
+                </button>
+                <hr className="my-2" />
+                <button
+                  onClick={cleanUpAll}
+                  className="w-full p-3 bg-gray-800 text-white rounded hover:bg-black"
+                >
+                  Clean Up All Teams
                 </button>
               </div>
             )}

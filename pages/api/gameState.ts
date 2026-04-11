@@ -61,6 +61,19 @@ export default async function handler(
       return res.status(200).json({ message: "Game started successfully" });
     }
 
+    if (action === "reset") {
+      const { error } = await supabase
+        .from("game_state")
+        .update({ timer: 420, game_active: false, game_ended: false })
+        .eq("id", 1);
+
+      if (error) {
+        console.error("Error resetting game state:", error);
+        return res.status(500).json({ error: "Failed to reset game state" });
+      }
+      return res.status(200).json({ message: "Game state reset successfully" });
+    }
+
     if (action === "end") {
       const { error } = await supabase
         .from("game_state")
