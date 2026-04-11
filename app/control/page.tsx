@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import type { GameState, Team } from "@/types";
 
 /**
  * Control Page
@@ -39,7 +40,7 @@ const ControlPage: React.FC = () => {
           console.error("Error fetching teams:", response.statusText);
           return;
         }
-        const data = await response.json();
+        const data = (await response.json()) as Team[];
         if (Array.isArray(data)) {
           setTeams(data);
           console.log("Fetched teams:", data);
@@ -65,7 +66,7 @@ const ControlPage: React.FC = () => {
           return;
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as GameState;
         console.log("Fetched game state:", data);
         setTimer(data.timer);
         setGameActive(data.game_active);
@@ -127,8 +128,20 @@ const ControlPage: React.FC = () => {
     };
   }, [gameActive, gameEnded]);
 
+  // Sanity check: if a game is active but fewer than 2 teams remain, end the game.
+  useEffect(() => {
+    if (gameActive && teams.length < 2) {
+      handleManualEnd();
+    }
+  }, [gameActive, teams.length]);
+
   // Starts the game by updating the game state in the backend.
   const handleStartGame = async () => {
+    if (teams.length < 2) {
+      alert("You need at least two teams in the queue to start a game.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/gameState?action=start", {
         method: "PUT",
@@ -191,7 +204,7 @@ const ControlPage: React.FC = () => {
       const response = await fetch("/api/teams", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamName, password }),
+        body: JSON.stringify({ teamname: teamName, password }),
       });
 
       const result = await response.json(); // Parse JSON response
@@ -203,8 +216,7 @@ const ControlPage: React.FC = () => {
         console.log("Success:", result.message); // Log success message
       } else {
         console.error("Error:", result.error || "Unknown error occurred");
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
+        alert(`Error: ${result.error || result.message || "Unknown error occurred"}`);
       }
     } catch (error) {
       console.error("Failed to create team:", error);
@@ -224,9 +236,9 @@ const ControlPage: React.FC = () => {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          teamName,
+          teamname: teamName,
           password: teamPassword,
-          masterKey, // Include the master key in the request body
+          masterKey,
         }),
       });
 

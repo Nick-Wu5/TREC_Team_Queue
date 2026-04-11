@@ -10,7 +10,7 @@ import { supabase } from "../../utils/supabase-js";
  * removing teams securely using passwords or a master key.
  *
  * Request Body (for POST/DELETE/PUT):
- * - `teamName` (string): Name of the team.
+ * - `teamname` (string): Name of the team.
  * - `password` (string): Password for authentication.
  * - `masterKey` (string, optional): Master key for admin-level deletion.
  * - `orderedTeams` (array, optional): Array of team IDs and their updated positions.
@@ -24,7 +24,7 @@ import { supabase } from "../../utils/supabase-js";
  */
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   try {
     if (req.method === "GET") {
@@ -32,39 +32,47 @@ export default async function handler(
       const teams = await readTeams();
       return res.status(200).json(teams);
     } else if (req.method === "POST") {
-      // Adds a new team to the database.
-      // Add a new team
-      console.log("Handling POST request");
-      const { teamName, password } = req.body;
+      const { teamname, password } = req.body;
 
-      if (!teamName || !password) {
+      if (!teamname || !password) {
         return res
-          .status(200)
+          .status(400)
           .json({ error: "Team name and password are required" });
       }
 
       try {
-        const { data, error } = await supabase
+        // Determine the next position so the team goes to the end of the queue
+        const { count, error: countError } = await supabase
           .from("teams")
-          .insert([{ teamName, password }]);
+          .select("*", { count: "exact", head: true });
 
-        // Debugging: Log Supabase response
-        if (error) {
-          console.error("Supabase Error:", error);
-          throw error;
+        if (countError) {
+          console.error("Supabase count error:", countError);
+          return res.status(500).json({ error: "Failed to add team" });
         }
 
-        console.log("Insert Success:", data);
+        const position = (count ?? 0) + 1;
+
+        const { error } = await supabase
+          .from("teams")
+          .insert([{ teamname, password, position }]);
+
+        if (error) {
+          console.error("Supabase Error:", error);
+          return res.status(500).json({ error: error.message });
+        }
+
         return res.status(201).json({ message: "Team added successfully" });
       } catch (error) {
         console.error("API Error:", error);
+        return res.status(500).json({ error: "Failed to add team" });
       }
     } else if (req.method === "DELETE") {
       // Removes a team using the team's name, password, or a master key for override.
       try {
-        const { teamName, password, masterKey } = req.body;
+        const { teamname, password, masterKey } = req.body;
 
-        if (!teamName || (!password && !masterKey)) {
+        if (!teamname || (!password && !masterKey)) {
           return res
             .status(400)
             .json({ message: "Team name and password are required" });
@@ -73,12 +81,12 @@ export default async function handler(
         // Define the master key securely (use an environment variable)
         const MASTER_KEY = process.env.MASTER_KEY;
 
-        if (masterKey === MASTER_KEY) {
+        if (MASTER_KEY && masterKey === MASTER_KEY) {
           // Master key is valid, skip password check
           const { data: team, error: fetchError } = await supabase
             .from("teams")
             .select("id")
-            .ilike("teamName", teamName)
+            .ilike("teamname", teamname)
             .single();
 
           if (fetchError || !team) {
@@ -103,7 +111,7 @@ export default async function handler(
           const { data: team, error: fetchError } = await supabase
             .from("teams")
             .select("id, password")
-            .ilike("teamName", teamName)
+            .ilike("teamname", teamname)
             .single();
 
           if (fetchError || !team) {
@@ -159,7 +167,7 @@ export default async function handler(
           }
 
           const updates = orderedTeams.map(({ id, position }) =>
-            supabase.from("teams").update({ position }).eq("id", id)
+            supabase.from("teams").update({ position }).eq("id", id),
           );
           await Promise.all(updates);
           console.log("Team positions updated in the database");
@@ -170,7 +178,7 @@ export default async function handler(
           const { data, error } = await supabase
             .from("teams")
             .update({ streak })
-            .eq("teamName", teamName);
+            .eq("teamname", teamName);
 
           console.log("increased streaks");
 
@@ -213,5 +221,5 @@ const readTeams = async () => {
     .select("*")
     .order("position", { ascending: true }); // Order by 'position' in ascending order
   if (error) throw error;
-  return data;
+  return data.map(({ teamname, ...rest }) => ({ ...rest, teamName: teamname }));
 };

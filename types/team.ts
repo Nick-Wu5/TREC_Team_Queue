@@ -1,8 +1,8 @@
-// Define the Team type
-interface Team {
+export interface Team {
   id: string;
   teamName: string;
   password: string;
   position: number;
   streak: number;
 }
+
