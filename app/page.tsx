@@ -48,9 +48,10 @@ export default function Home() {
     }
   }, [gameState]);
 
-  const mainListTeams = teamsState.slice(0, 5).map((t) => t.teamName);
+  const queueTeams = teamsState.slice(2);
+  const mainListTeams = queueTeams.slice(0, 5).map((t) => t.teamName);
   const additionalTeamsCount =
-    teamsState.length > 5 ? teamsState.length - 5 : 0;
+    queueTeams.length > 5 ? queueTeams.length - 5 : 0;
 
   return (
     <div className="main-container flex flex-col">
