@@ -24,6 +24,18 @@ As a regular participant in the facility, I noticed a significant lack of struct
 - **Vercel**: For hosting and deploying the application.
 - **Supabase**: Backend solution for managing team and queue information with real-time database capabilities.
 
+## Demo Mode
+
+To show off the app without touching the real Supabase data, set `DEMO_MODE=true`
+in `.env.local` and restart `npm run dev`. This swaps the `/api/teams` and
+`/api/gameState` endpoints over to an in-memory "dummy database" (see
+`utils/demoStore.ts`) preloaded with soccer-referenced team names (Premier
+League club nicknames and World Cup nation nicknames, e.g. "Gunners", "Red
+Devils", "3 Lions", "Selecao"). Adding, removing, and reordering teams all work
+normally, but nothing is written to Supabase, and the data resets whenever the
+server restarts. Set it back to `false` (or remove it) to reconnect to the
+real database.
+
 ## Live Demo
 
 Visit the live hosted project at [nextjs-trecqueue.vercel.app](https://nextjs-trecqueue.vercel.app).

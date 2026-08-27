@@ -1,5 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { supabase } from "../../utils/supabase-js";
+import { isDemoMode } from "../../utils/demoMode";
+import {
+  demoGetTeams,
+  demoAddTeam,
+  demoFindTeamByName,
+  demoDeleteTeamById,
+  demoClearAllTeams,
+  demoUpdatePositions,
+  demoUpdateStreakByName,
+  demoResetAllStreaks,
+} from "../../utils/demoStore";
 
 /**
  * API Endpoint: Team Management
@@ -41,6 +52,11 @@ export default async function handler(
       }
 
       try {
+        if (isDemoMode()) {
+          demoAddTeam(teamname, password);
+          return res.status(201).json({ message: "Team added successfully" });
+        }
+
         // Determine the next position so the team goes to the end of the queue
         const { count, error: countError } = await supabase
           .from("teams")
@@ -79,6 +95,11 @@ export default async function handler(
             return res.status(401).json({ message: "Invalid master key" });
           }
 
+          if (isDemoMode()) {
+            demoClearAllTeams();
+            return res.status(200).json({ message: "All teams cleared" });
+          }
+
           const { error } = await supabase.from("teams").delete().neq("id", 0);
           if (error) {
             console.error("Error clearing all teams:", error);
@@ -92,6 +113,27 @@ export default async function handler(
           return res
             .status(400)
             .json({ message: "Team name and password are required" });
+        }
+
+        if (isDemoMode()) {
+          const team = demoFindTeamByName(teamname);
+          if (!team) {
+            return res.status(404).json({ message: "Team not found" });
+          }
+
+          if (MASTER_KEY && masterKey === MASTER_KEY) {
+            demoDeleteTeamById(team.id);
+            return res
+              .status(200)
+              .json({ message: "Team deleted successfully using master key" });
+          }
+
+          if (team.password !== password) {
+            return res.status(401).json({ message: "Incorrect password" });
+          }
+
+          demoDeleteTeamById(team.id);
+          return res.status(200).json({ message: "Team deleted successfully" });
         }
 
         if (MASTER_KEY && masterKey === MASTER_KEY) {
@@ -155,6 +197,32 @@ export default async function handler(
       // Updates team positions and streaks based on the game outcome.
       try {
         const { orderedTeams, teamName, streak, resetAll } = req.body; // Get orderedTeams, teamName, and streak from request body
+
+        if (isDemoMode()) {
+          if (resetAll) {
+            demoResetAllStreaks();
+          }
+
+          if (orderedTeams) {
+            if (!Array.isArray(orderedTeams)) {
+              return res
+                .status(200)
+                .json({ error: "Invalid team order provided" });
+            }
+            demoUpdatePositions(orderedTeams);
+          }
+
+          if (teamName && typeof streak === "number") {
+            demoUpdateStreakByName(teamName, streak);
+            return res
+              .status(200)
+              .json({ message: "Team streak updated successfully" });
+          }
+
+          return res.status(200).json({
+            error: "Invalid request data for updating streak or positions",
+          });
+        }
 
         if (resetAll) {
           // Reset streaks for all teams
@@ -227,8 +295,16 @@ export default async function handler(
   }
 }
 
-// Fetches all tams from the teams table in Supabase, ordered by the position column
+// Fetches all teams, ordered by the position column. Reads from the in-memory
+// demo store when DEMO_MODE is on, otherwise from the Supabase teams table.
 const readTeams = async () => {
+  if (isDemoMode()) {
+    return demoGetTeams().map(({ teamname, ...rest }) => ({
+      ...rest,
+      teamName: teamname,
+    }));
+  }
+
   const { data, error } = await supabase
     .from("teams")
     .select("*")

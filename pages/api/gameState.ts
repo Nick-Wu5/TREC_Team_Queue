@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { supabase } from "../../utils/supabase-js";
+import { isDemoMode } from "../../utils/demoMode";
+import { demoGetGameState, demoUpdateGameState } from "../../utils/demoStore";
 
 /**
  * API Endpoint: Game State Management
@@ -23,6 +25,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
+    if (isDemoMode()) {
+      return res.status(200).json(demoGetGameState());
+    }
+
     try {
       const { data, error } = await supabase
         .from("game_state")
@@ -45,6 +51,32 @@ export default async function handler(
   if (req.method === "PUT") {
     const { action } = req.query;
     const { timer } = req.body;
+
+    if (isDemoMode()) {
+      if (action === "start") {
+        demoUpdateGameState({ timer: 420, game_active: true, game_ended: false });
+        return res.status(200).json({ message: "Game started successfully" });
+      }
+
+      if (action === "reset") {
+        demoUpdateGameState({ timer: 420, game_active: false, game_ended: false });
+        return res.status(200).json({ message: "Game state reset successfully" });
+      }
+
+      if (action === "end") {
+        demoUpdateGameState({ timer: 420, game_active: false, game_ended: true });
+        return res.status(200).json({ message: "Game ended successfully" });
+      }
+
+      if (!action && timer !== undefined) {
+        demoUpdateGameState({ timer });
+        return res.status(200).json({ message: "Timer updated successfully" });
+      }
+
+      return res
+        .status(400)
+        .json({ error: "Invalid action parameter or missing timer" });
+    }
 
     // Handle "start" and "end" actions
     if (action === "start") {
