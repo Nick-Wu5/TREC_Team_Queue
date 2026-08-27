@@ -99,7 +99,7 @@ export default function Home() {
         </div>
         <div className="right-section">
           <Image
-            src="/son.jpeg"
+            src="/PurdueRecLogo.png"
             alt="Purdue Rec Logo"
             className="footer-image-right"
             width={250}
